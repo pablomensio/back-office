@@ -1,0 +1,40 @@
+{
+  "placeholderImages": [
+    {
+      "id": "avatar-1",
+      "description": "Avatar for John Doe",
+      "imageUrl": "https://picsum.photos/seed/101/40/40",
+      "imageHint": "male avatar"
+    },
+    {
+      "id": "avatar-2",
+      "description": "Avatar for Jane Smith",
+      "imageUrl": "https://picsum.photos/seed/102/40/40",
+      "imageHint": "female avatar"
+    },
+    {
+      "id": "avatar-3",
+      "description": "Avatar for Michael Johnson",
+      "imageUrl": "https://picsum.photos/seed/103/40/40",
+      "imageHint": "male avatar"
+    },
+    {
+      "id": "avatar-4",
+      "description": "Avatar for Emily Davis",
+      "imageUrl": "https://picsum.photos/seed/104/40/40",
+      "imageHint": "female avatar"
+    },
+    {
+      "id": "avatar-5",
+      "description": "Avatar for David Wilson",
+      "imageUrl": "https://picsum.photos/seed/105/40/40",
+      "imageHint": "male avatar"
+    },
+    {
+      "id": "user-avatar",
+      "description": "Default user avatar for header",
+      "imageUrl": "https://picsum.photos/seed/user/40/40",
+      "imageHint": "person avatar"
+    }
+  ]
+}

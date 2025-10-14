@@ -1,0 +1,297 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "type": "object",
+      "description": "Represents an application user with role and hierarchy information.",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user within the application.",
+          "enum": ["admin", "supervisor", "vendedor"]
+        },
+        "reportsTo": {
+          "type": "string",
+          "description": "The UID of the user this user reports to (e.g., a vendedor reports to a supervisor)."
+        }
+      },
+      "required": ["email", "role"]
+    },
+    "CustomerProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CustomerProfile",
+      "type": "object",
+      "description": "Represents a customer's profile, including contact information, preferences, and purchase history.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Customer Profile."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "Customer's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "Customer's last name."
+        },
+        "email": {
+          "type": "string",
+          "description": "Customer's email address.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Customer's phone number."
+        },
+        "address": {
+          "type": "string",
+          "description": "Customer's address."
+        },
+        "preferences": {
+          "type": "string",
+          "description": "Customer's preferences (e.g., car type, color)."
+        },
+        "purchaseHistory": {
+          "type": "array",
+          "description": "List of previous purchases (references to Sales records).",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "phone"
+      ]
+    },
+    "FollowUpActivity": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "FollowUpActivity",
+      "type": "object",
+      "description": "Represents a follow-up activity with a customer (call, email, meeting).",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Follow-Up Activity."
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference to CustomerProfile. (Relationship: CustomerProfile 1:N FollowUpActivity)"
+        },
+        "activityType": {
+          "type": "string",
+          "description": "Type of activity (e.g., call, email, meeting)."
+        },
+        "date": {
+          "type": "string",
+          "description": "Date of the activity.",
+          "format": "date-time"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Notes about the activity."
+        }
+      },
+      "required": [
+        "id",
+        "customerId",
+        "activityType",
+        "date"
+      ]
+    },
+    "TaskReminder": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "TaskReminder",
+      "type": "object",
+      "description": "Represents a reminder for a task (e.g., follow-up call, appointment).",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Task Reminder."
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference to CustomerProfile. (Relationship: CustomerProfile 1:N TaskReminder)"
+        },
+        "taskType": {
+          "type": "string",
+          "description": "Type of task (e.g., follow-up call, appointment)."
+        },
+        "dueDate": {
+          "type": "string",
+          "description": "Due date of the task.",
+          "format": "date-time"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Notes about the task."
+        },
+        "isCompleted": {
+          "type": "boolean",
+          "description": "Indicates whether the task is completed."
+        }
+      },
+      "required": [
+        "id",
+        "customerId",
+        "taskType",
+        "dueDate",
+        "isCompleted"
+      ]
+    },
+    "SalesFunnelStatus": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SalesFunnelStatus",
+      "type": "object",
+      "description": "Represents the status of a customer in the sales funnel.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Sales Funnel Status."
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference to CustomerProfile. (Relationship: CustomerProfile 1:1 SalesFunnelStatus)"
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status in the sales funnel (e.g., Lead, Qualified, Proposal, Negotiation, Closed)."
+        },
+        "lastUpdated": {
+          "type": "string",
+          "description": "Last updated date.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "customerId",
+        "status",
+        "lastUpdated"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores application user profiles, including their role and reporting structure.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user, corresponding to their Firebase Auth UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/customerProfiles/{customerProfileId}",
+        "definition": {
+          "entityName": "CustomerProfile",
+          "schema": {
+            "$ref": "#/backend/entities/CustomerProfile"
+          },
+          "description": "Stores customer profile data for each user. Path-based ownership ensures that only the authenticated user (salesperson) can access and modify customer profiles associated with their user ID.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (salesperson)."
+            },
+            {
+              "name": "customerProfileId",
+              "description": "The unique identifier of the customer profile."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/customerProfiles/{customerProfileId}/followUpActivities/{followUpActivityId}",
+        "definition": {
+          "entityName": "FollowUpActivity",
+          "schema": {
+            "$ref": "#/backend/entities/FollowUpActivity"
+          },
+          "description": "Stores follow-up activities associated with a specific customer profile. Path-based ownership ensures only the salesperson who owns the customer profile can access these activities. Includes denormalized 'customerId'.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (salesperson)."
+            },
+            {
+              "name": "customerProfileId",
+              "description": "The unique identifier of the customer profile."
+            },
+            {
+              "name": "followUpActivityId",
+              "description": "The unique identifier of the follow-up activity."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/customerProfiles/{customerProfileId}/taskReminders/{taskReminderId}",
+        "definition": {
+          "entityName": "TaskReminder",
+          "schema": {
+            "$ref": "#/backend/entities/TaskReminder"
+          },
+          "description": "Stores task reminders associated with a specific customer profile. Path-based ownership ensures only the salesperson who owns the customer profile can access these reminders. Includes denormalized 'customerId'.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (salesperson)."
+            },
+            {
+              "name": "customerProfileId",
+              "description": "The unique identifier of the customer profile."
+            },
+            {
+              "name": "taskReminderId",
+              "description": "The unique identifier of the task reminder."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/customerProfiles/{customerProfileId}/salesFunnelStatus",
+        "definition": {
+          "entityName": "SalesFunnelStatus",
+          "schema": {
+            "$ref": "#/backend/entities/SalesFunnelStatus"
+          },
+          "description": "Stores the sales funnel status for a specific customer profile. Path-based ownership ensures only the salesperson who owns the customer profile can access this status. Includes denormalized 'customerId'.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (salesperson)."
+            },
+            {
+              "name": "customerProfileId",
+              "description": "The unique identifier of the customer profile."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to support the Meny Back-Office application for managing customer profiles, follow-up activities, task reminders, and sales funnel status. It prioritizes authorization independence, clarity, and scalability, following the core design principles outlined in the prompt. Specifically, it leverages path-based ownership and avoids `get()` calls in security rules to ensure atomic operations.\n\nAuthorization Independence is achieved by structuring data so that authorization depends only on the `request.auth.uid` and the document path. For example, customer profiles and related data are stored under `/users/{userId}`, making ownership clear and enforceable without needing to read parent documents.\n\nThe structure also supports secure `list` operations (QAPs) by segregating data based on ownership.  Each salesperson's data is stored under their user ID, ensuring they can only list and access data they own. The use of path-based ownership and the avoidance of complex, hierarchical dependencies guarantees efficient and secure data access, simplifying security rule definitions and enhancing debuggability."
+  }
+}

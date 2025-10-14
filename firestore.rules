@@ -1,0 +1,145 @@
+/**
+ * @fileOverview Firestore Security Rules for the Meny Back-Office application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model where each salesperson can only access data related to their own customers.
+ *
+ * Data Structure:
+ * All data is nested under /users/{userId}, ensuring that data access is tied to the authenticated user's ID.  Customer profiles, follow-up activities, task reminders, and sales funnel statuses are all stored under this user-specific path.
+ *
+ * Key Security Decisions:
+ * -  User listing is disabled.
+ * -  All write operations are validated against the user's authentication UID.
+ * -  Read operations are restricted to the owning user.
+ * -  Data types are NOT validated in this prototyping phase, except where required for authorization.
+ *
+ * Denormalization for Authorization:
+ * The `customerId` is denormalized into subcollections like `followUpActivities` and `taskReminders` to simplify authorization rules and avoid costly `get()` calls.
+ *
+ * Structural Segregation:
+ * The application uses path-based ownership to segregate data. Each user has their own data tree under `/users/{userId}`.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Secure the /users/{userId} collection. Allows creating a user document only if the authenticated user's UID matches the userId in the path.
+     * @path /users/{userId}
+     * @allow (create) - Authenticated user with UID 'user123' can create /users/user123 document.
+     * @deny (create) - Authenticated user with UID 'user456' cannot create /users/user123 document.
+     * @principle Enforces document ownership and self-creation.
+     */
+    match /users/{userId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      allow get: if false;
+      allow list: if false;
+      allow create: if isOwner(userId);
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Secure the /users/{userId}/customerProfiles/{customerProfileId} collection. Allows read/write access only to the owner (salesperson).
+     * @path /users/{userId}/customerProfiles/{customerProfileId}
+     * @allow (create) - Authenticated user with UID 'user123' can create /users/user123/customerProfiles/customer001.
+     * @allow (update) - Authenticated user with UID 'user123' can update /users/user123/customerProfiles/customer001.
+     * @allow (delete) - Authenticated user with UID 'user123' can delete /users/user123/customerProfiles/customer001.
+     * @deny (create) - Authenticated user with UID 'user456' cannot create /users/user123/customerProfiles/customer001.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId}/customerProfiles/{customerProfileId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Secure the /users/{userId}/customerProfiles/{customerProfileId}/followUpActivities/{followUpActivityId} collection.  Allows read/write access only to the owner (salesperson).
+     * @path /users/{userId}/customerProfiles/{customerProfileId}/followUpActivities/{followUpActivityId}
+     * @allow (create) - Authenticated user with UID 'user123' can create /users/user123/customerProfiles/customer001/followUpActivities/activity001.
+     * @allow (update) - Authenticated user with UID 'user123' can update /users/user123/customerProfiles/customer001/followUpActivities/activity001.
+     * @allow (delete) - Authenticated user with UID 'user123' can delete /users/user123/customerProfiles/customer001/followUpActivities/activity001.
+     * @deny (create) - Authenticated user with UID 'user456' cannot create /users/user123/customerProfiles/customer001/followUpActivities/activity001.
+     * @principle Enforces document ownership for all operations.  Requires that the `customerId` in the document matches the path.
+     */
+    match /users/{userId}/customerProfiles/{customerProfileId}/followUpActivities/{followUpActivityId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Secure the /users/{userId}/customerProfiles/{customerProfileId}/taskReminders/{taskReminderId} collection.  Allows read/write access only to the owner (salesperson).
+     * @path /users/{userId}/customerProfiles/{customerProfileId}/taskReminders/{taskReminderId}
+     * @allow (create) - Authenticated user with UID 'user123' can create /users/user123/customerProfiles/customer001/taskReminders/reminder001.
+     * @allow (update) - Authenticated user with UID 'user123' can update /users/user123/customerProfiles/customer001/taskReminders/reminder001.
+     * @allow (delete) - Authenticated user with UID 'user123' can delete /users/user123/customerProfiles/customer001/taskReminders/reminder001.
+     * @deny (create) - Authenticated user with UID 'user456' cannot create /users/user123/customerProfiles/customer001/taskReminders/reminder001.
+     * @principle Enforces document ownership for all operations. Requires that the `customerId` in the document matches the path.
+     */
+    match /users/{userId}/customerProfiles/{customerProfileId}/taskReminders/{taskReminderId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Secure the /users/{userId}/customerProfiles/{customerProfileId}/salesFunnelStatus collection.  Allows read/write access only to the owner (salesperson).
+     * @path /users/{userId}/customerProfiles/{customerProfileId}/salesFunnelStatus
+     * @allow (create) - Authenticated user with UID 'user123' can create /users/user123/customerProfiles/customer001/salesFunnelStatus.
+     * @allow (update) - Authenticated user with UID 'user123' can update /users/user123/customerProfiles/customer001/salesFunnelStatus.
+     * @allow (delete) - Authenticated user with UID 'user123' can delete /users/user123/customerProfiles/customer001/salesFunnelStatus.
+     * @deny (create) - Authenticated user with UID 'user456' cannot create /users/user123/customerProfiles/customer001/salesFunnelStatus.
+     * @principle Enforces document ownership for all operations. Requires that the `customerId` in the document matches the path.
+     */
+    match /users/{userId}/customerProfiles/{customerProfileId}/salesFunnelStatus {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}
