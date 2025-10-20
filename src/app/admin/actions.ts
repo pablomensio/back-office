@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { adminAuth, adminDb } from '@/lib/firebaseAdmin'; // Importa la instancia correcta y ya inicializada
+import { adminAuth, adminDb } from '@/lib/firebaseAdmin'; // Reverted to the clean alias path
 
 const CreateUserInputSchema = z.object({
   email: z.string().email(),
@@ -15,8 +15,6 @@ const CreateUserInputSchema = z.object({
 
 export async function createUser(input: z.infer<typeof CreateUserInputSchema>) {
   try {
-    // Ya no es necesario llamar a initializeAdminIfNeeded()
-    
     const validatedInput = CreateUserInputSchema.parse(input);
 
     const userRecord = await adminAuth.createUser({
@@ -39,7 +37,6 @@ export async function createUser(input: z.infer<typeof CreateUserInputSchema>) {
     return { success: true, uid: userRecord.uid };
   } catch (error: any) {
     console.error('Error creating user:', error);
-    // Re-lanza un error simple para ser capturado por el cliente
     throw new Error(error.message || 'An unexpected error occurred.');
   }
 }
@@ -53,8 +50,6 @@ const UpdateUserInputSchema = z.object({
 
 export async function updateUser(input: z.infer<typeof UpdateUserInputSchema>) {
     try {
-        // Ya no es necesario llamar a initializeAdminIfNeeded()
-        
         const validatedInput = UpdateUserInputSchema.parse(input);
         const { uid, ...updateData } = validatedInput;
 
