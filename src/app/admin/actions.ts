@@ -2,36 +2,8 @@
 'use server';
 
 import { z } from 'zod';
-import * as admin from 'firebase-admin';
 import { revalidatePath } from 'next/cache';
-
-// Helper to initialize the Admin SDK safely (only once)
-function initializeAdminIfNeeded() {
-  if (admin.apps.length === 0) {
-    try {
-        // This works in Firebase App Hosting and other managed environments
-        admin.initializeApp();
-        console.log('🔥 Firebase Admin SDK initialized successfully via Application Default Credentials.');
-    } catch (e: any) {
-        console.error("Failed to initialize Firebase Admin SDK with ADC, trying service account from ENV", e.message);
-        try {
-            // Fallback for local development or environments where the service account is in an env var
-            const serviceAccountString = process.env.FIREBASE_SERVICE_ACCOUNT;
-            if (!serviceAccountString) {
-                throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is not set.");
-            }
-            const serviceAccount = JSON.parse(serviceAccountString);
-            admin.initializeApp({
-                credential: admin.credential.cert(serviceAccount),
-            });
-            console.log('🔥 Firebase Admin SDK initialized successfully via environment variable.');
-        } catch (error: any) {
-            console.error("Firebase Admin SDK initialization error:", error);
-            throw new Error(`Firebase Admin SDK failed to initialize: ${error.message}`);
-        }
-    }
-  }
-}
+import { adminAuth, adminDb } from '@/lib/firebaseAdmin'; // Importa la instancia correcta y ya inicializada
 
 const CreateUserInputSchema = z.object({
   email: z.string().email(),
@@ -43,11 +15,9 @@ const CreateUserInputSchema = z.object({
 
 export async function createUser(input: z.infer<typeof CreateUserInputSchema>) {
   try {
-    initializeAdminIfNeeded();
-
+    // Ya no es necesario llamar a initializeAdminIfNeeded()
+    
     const validatedInput = CreateUserInputSchema.parse(input);
-    const adminAuth = admin.auth();
-    const adminDb = admin.firestore();
 
     const userRecord = await adminAuth.createUser({
       email: validatedInput.email,
@@ -69,7 +39,7 @@ export async function createUser(input: z.infer<typeof CreateUserInputSchema>) {
     return { success: true, uid: userRecord.uid };
   } catch (error: any) {
     console.error('Error creating user:', error);
-    // Re-throw a plain error to be caught by the client
+    // Re-lanza un error simple para ser capturado por el cliente
     throw new Error(error.message || 'An unexpected error occurred.');
   }
 }
@@ -83,15 +53,15 @@ const UpdateUserInputSchema = z.object({
 
 export async function updateUser(input: z.infer<typeof UpdateUserInputSchema>) {
     try {
-        initializeAdminIfNeeded();
-
+        // Ya no es necesario llamar a initializeAdminIfNeeded()
+        
         const validatedInput = UpdateUserInputSchema.parse(input);
         const { uid, ...updateData } = validatedInput;
 
         const cleanUpdateData = Object.fromEntries(Object.entries(updateData).filter(([_, v]) => v !== undefined));
 
         if (Object.keys(cleanUpdateData).length > 0) {
-            await admin.firestore().collection('users').doc(uid).update(cleanUpdateData);
+            await adminDb.collection('users').doc(uid).update(cleanUpdateData);
         }
 
         revalidatePath('/admin');
