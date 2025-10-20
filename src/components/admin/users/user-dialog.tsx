@@ -35,7 +35,7 @@ import { PlusCircle } from "lucide-react";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { createUser, updateUser } from "@/ai/flows/user-management-flow";
+import { createUser, updateUser } from "@/app/admin/actions";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Por favor, introduce un correo electrónico válido." }),
@@ -55,9 +55,8 @@ export function UserDialog({ user, children }: UserDialogProps) {
   const { toast } = useToast();
   const isEditMode = !!user;
 
-  // Adjust schema for edit mode (password is not required)
   const finalSchema = isEditMode
-    ? formSchema.omit({ email: true, password: true }) // Can't change email or password in edit mode
+    ? formSchema.omit({ email: true, password: true })
     : formSchema.refine(data => data.password, {
         message: "La contraseña es obligatoria para nuevos usuarios.",
         path: ["password"],
@@ -85,25 +84,20 @@ export function UserDialog({ user, children }: UserDialogProps) {
   }, [open, user, form, isEditMode]);
 
   async function onSubmit(values: z.infer<typeof finalSchema>) {
-    console.log("Form submitted. Values:", values);
     try {
       if (isEditMode && user?.uid) {
-        console.log(`Attempting to update user: ${user.uid}`);
         await updateUser({ 
             uid: user.uid, 
             displayName: values.displayName,
             role: values.role,
             reportsTo: values.reportsTo
         });
-        console.log("User update successful.");
         toast({
           title: "Usuario actualizado",
           description: `${values.displayName} ha sido guardado.`,
         });
       } else {
         const createValues = values as z.infer<typeof formSchema>;
-        console.log("Attempting to create new user with data:", createValues);
-        
         await createUser({
           email: createValues.email,
           password: createValues.password!,
@@ -112,7 +106,6 @@ export function UserDialog({ user, children }: UserDialogProps) {
           reportsTo: createValues.reportsTo
         });
 
-        console.log("User creation successful.");
         toast({
           title: "Usuario creado",
           description: `${values.displayName} ha sido creado con éxito.`,
@@ -121,7 +114,6 @@ export function UserDialog({ user, children }: UserDialogProps) {
       }
       setOpen(false);
     } catch (error: any) {
-      console.error("Failed to save user:", error);
       toast({
         variant: "destructive",
         title: "Error al guardar",
