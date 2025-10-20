@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -84,34 +85,39 @@ export function UserDialog({ user, children }: UserDialogProps) {
   }, [open, user, form, isEditMode]);
 
   async function onSubmit(values: z.infer<typeof finalSchema>) {
+    console.log("Form submitted. Values:", values);
     try {
       if (isEditMode && user?.uid) {
-        // Update existing user
+        console.log(`Attempting to update user: ${user.uid}`);
         await updateUser({ 
             uid: user.uid, 
             displayName: values.displayName,
             role: values.role,
             reportsTo: values.reportsTo
         });
+        console.log("User update successful.");
         toast({
           title: "Usuario actualizado",
           description: `${values.displayName} ha sido guardado.`,
         });
       } else {
-        // Create new user (casting to access full schema properties)
         const createValues = values as z.infer<typeof formSchema>;
+        console.log("Attempting to create new user with data:", createValues);
+        
         await createUser({
           email: createValues.email,
-          password: createValues.password!, // Password is required by schema here
+          password: createValues.password!,
           displayName: createValues.displayName,
           role: createValues.role,
           reportsTo: createValues.reportsTo
         });
 
+        console.log("User creation successful.");
         toast({
           title: "Usuario creado",
           description: `${values.displayName} ha sido creado con éxito.`,
         });
+        form.reset(); 
       }
       setOpen(false);
     } catch (error: any) {
