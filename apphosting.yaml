@@ -6,10 +6,7 @@ runConfig:
   # more instances in response to increased traffic.
   maxInstances: 1
 
-env:
-  - variable: FIREBASE_PROJECT_ID
-    value: "studio-4541568924-74ba3"
-  - variable: FIREBASE_CLIENT_EMAIL
-    value: "firebase-adminsdk-fbsvc@studio-4541568924-74ba3.iam.gserviceaccount.com"
-  - variable: FIREBASE_PRIVATE_KEY
-    value: "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCd+DD8ejADQ7qG\nN5cuAztfDIDdDyDqZ+hdn92/B5iLRX5ROjXjQiMwcE4WEIeJiYh9px9jw+yLUjfO\nhhvg9HxmadVrvTYCuPlCswCkLmwceU1gN1Fmip0pLqqxtO9fFq5CwXLCGaeQaRJk\nPSZenJF/RxSO0LHZOnaYuloOny58cxJaFX0onsDYaVfF7lRgOxIageLU65Ej2nnw\nSIDn4wEvXMx4QmbNl7hut38DnhPtK9NXXwJa/soT/ECpkS3U2gM9XnkhkcuNCqoA\nk47jy8HcvQuPr+KO86Ed/mqvqkdJ0KJyONkAMUwM0yiKaoqtJrwhy5bgxmg+9Ijm\nRVq3zeVpAgMBAAECggEABMHeX8wiOVxHIsGhKOk/VtEelF8J7mVAsd5y+Xd2GEOj\nK+O6jw8v1hvxDhMOBziqxqCg07VTy1enh0MHVef8UxfpgybImJ5ky1BuuthhuHMi\nvxILaTDQI4Gx8aDG+1sd1l7TC5YQM3YmmqQzd/KeeHHLObMpQqcoaS27hpMz/YVs\nL30jqlQJoJCcGI7tqfAFemrZkEAH1guM80Aao3jDr7DdFy4IAI8xVCAcyyYQELzS\n4DE85HfJPC6U1hpLhunFAQtDKV2jtqqbHEnV5+CZH+sP0d/OERRHUshvEDxipvXB\nyGlKzBSjnGiMJlfzy7YI27++gIFMI4PfmKL6PFFNHQKBgQDQsbqck5zJo3dMmY9M\neyRKtevZezABNncxOK4oUPKDTtRV/CRuijIi2AWfKvQWbXMVN1O+wjkGJQtLvdp6\n174REff2kaJvpPkUVLgEPuOctZ7lhGFAyXnw2rgE5N8YG1hTRP12XBImt6/AYx5j\nVUFPugi74Lwmt50BhZZWP4rs1wKBgQDBxveWaj4c1JXHZptcAZQ9J2hs0s1+cz1H\nv6NEXfIHF5ZpxJCQjNRTe516QFG3yQVdGgT73P9OxKMWH6qN/rayuS4EZ58lY7mr\n85fPFKZL6WVZVI3kzVe9RNHafE40Ju/j19/e+4gIcd6h7kyceE1J7lzqckCQMvys\n+FL8FkM3vwKBgEk7JIWPEsR61QEPHYaz619ACRvOq2CxkQ+3mP1Ssla7Ua0+hjY3\nzjIF5asdsnswOuLmAD/+/W2XkCgq3cCfdfWdfYqLPhm5JSIqPExZGRvDa5eUZWAL\nkvuedFZbTaGy7sKBggOHeWMWr9htr5shroJggHIVAVEAu1puWvu23nQPAoGBAKyf\nIMRgFMD+KAegQlouFe58gqwfBmzVIAwgjcNDpW3n91h1gQskSams/1Z+oc2FSD/u\nA+6SquVyio4U24zvEbYY/QNzg/R86FRkBiK1lIcffeecSWNAAh9bhU6LWedfoGhq\nUMaFcGOFfPzoGltxV/i6XQ+FhDpxEWLNPK/Q7URlAoGALTjtKn1uiKvdu77N4B9C\nCGGaZMMBqnp8Yov9bdCj8KT3LY2QKA3ur10nTNXwtDILnhjqX8cpChR5zldJo2v+\noXhi2ER9L7oe5RtT7V+UxEzfXXBsnmUGJxA6uVAR3E0Fw8WcOPltJVTYtNxWTmRE\nqYVjUNOD8rdoXq4LIyq8vQk=\n-----END PRIVATE KEY-----\n"
+# Assign the correct service account identity to the backend.
+# This allows the Firebase Admin SDK to automatically find credentials
+# and permissions when deployed.
+serviceAccount: "519950387217-compute@developer.gserviceaccount.com"
