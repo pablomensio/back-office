@@ -7,7 +7,23 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { adminAuth, adminDb } from '../../lib/firebaseAdmin'; // Import the initialized services
+import * as admin from 'firebase-admin';
+
+// Helper to initialize the Admin SDK safely (only once)
+function initializeAdminIfNeeded() {
+  if (admin.apps.length === 0) {
+    try {
+      // In a managed environment like App Hosting, GOOGLE_APPLICATION_CREDENTIALS
+      // is set automatically. initializeApp() will use it.
+      admin.initializeApp();
+      console.log('🔥 Firebase Admin SDK initialized successfully.');
+    } catch (error: any) {
+      console.error("Firebase Admin SDK initialization error:", error);
+      // We throw the error to make it visible in the server logs and to the client.
+      throw new Error(`Firebase Admin SDK failed to initialize: ${error.message}`);
+    }
+  }
+}
 
 // Define the input schema for creating a user
 const CreateUserInputSchema = z.object({
@@ -21,6 +37,8 @@ export type CreateUserInput = z.infer<typeof CreateUserInputSchema>;
 
 const CreateUserOutputSchema = z.object({
   uid: z.string(),
+  success: z.boolean(),
+  message: z.string().optional(),
 });
 export type CreateUserOutput = z.infer<typeof CreateUserOutputSchema>;
 
@@ -52,16 +70,22 @@ const createUserFlow = ai.defineFlow(
   },
   async (input) => {
     try {
-      // 1. Create user in Firebase Auth using the imported adminAuth service
+      // Initialize before any operation
+      initializeAdminIfNeeded();
+
+      const adminAuth = admin.auth();
+      const adminDb = admin.firestore();
+
+      // 1. Create user in Firebase Auth
       const userRecord = await adminAuth.createUser({
         email: input.email,
         password: input.password,
         displayName: input.displayName,
-        emailVerified: true, // Admins can create verified users
+        emailVerified: true,
         disabled: false,
       });
 
-      // 2. Create user profile in Firestore using the imported adminDb service
+      // 2. Create user profile in Firestore
       const userDocRef = adminDb.collection('users').doc(userRecord.uid);
       await userDocRef.set({
         uid: userRecord.uid,
@@ -71,7 +95,7 @@ const createUserFlow = ai.defineFlow(
         reportsTo: input.reportsTo || null,
       });
 
-      return { uid: userRecord.uid };
+      return { uid: userRecord.uid, success: true };
     } catch (error: any) {
       console.error('Error in createUserFlow:', error);
       // Throwing the error so it can be caught by the client-side caller
@@ -89,6 +113,10 @@ const updateUserFlow = ai.defineFlow(
     },
     async (input) => {
       try {
+        // Initialize before any operation
+        initializeAdminIfNeeded();
+        const adminDb = admin.firestore();
+        
         const { uid, ...updateData } = input;
   
         // Filter out undefined values
@@ -98,7 +126,7 @@ const updateUserFlow = ai.defineFlow(
             return; // Nothing to update
         }
   
-        // Update user profile in Firestore using the imported adminDb service
+        // Update user profile in Firestore
         const userDocRef = adminDb.collection('users').doc(uid);
         await userDocRef.update(cleanUpdateData);
 
